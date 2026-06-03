@@ -1,0 +1,82 @@
+site_name: agent-grammar
+site_description: Test-gated AI agent workflow documentation for HTTP APIs.
+site_url: https://dlfelps.github.io/agent-grammar/
+repo_url: https://github.com/dlfelps/agent-grammar
+repo_name: dlfelps/agent-grammar
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.instant
+    - toc.follow
+    - content.code.copy
+    - content.code.annotate
+    - search.highlight
+    - search.suggest
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  icon:
+    repo: fontawesome/brands/github
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.details
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            show_source: true
+            show_root_heading: true
+            show_root_full_path: false
+            show_signature_annotations: true
+            separate_signature: true
+            docstring_style: google
+            merge_init_into_class: true
+
+nav:
+  - Home: index.md
+  - Installation: installation.md
+  - Walkthrough: walkthrough.md
+  - Configuration: configuration.md
+  - API Reference: api-reference.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/dlfelps/agent-grammar
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/agent-grammar/

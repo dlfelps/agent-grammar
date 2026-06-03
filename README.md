@@ -2,6 +2,8 @@
 
 **Test-gated AI agent workflow documentation for HTTP APIs.**
 
+📖 **Full documentation:** <https://dlfelps.github.io/agent-grammar/>
+
 `agent-grammar` lets API developers attach machine-readable workflow
 documentation to their existing `pytest` suite. When integration tests pass,
 a `workflows.md` blueprint is auto-compiled and served at a versioned route so
@@ -18,6 +20,10 @@ no missing parameter bindings.
 pip install agent-grammar          # core (pytest + serve via Starlette)
 pip install "agent-grammar[fastapi]"  # adds FastAPI for serving
 ```
+
+The pytest plugin is registered through the `pytest11` entry point and is
+discovered automatically once the package is installed — no `conftest.py`
+change required.
 
 ## Quick Start
 
@@ -90,6 +96,16 @@ agent-grammar export-agent-docs \
 
 Writes `./agent-docs/{cursor,claude,copilot,gemini}-rules.md` ready for the
 API host's developer portal.
+
+## Documentation
+
+The full documentation site at <https://dlfelps.github.io/agent-grammar/>
+covers:
+
+- **[Installation](https://dlfelps.github.io/agent-grammar/installation/)** — Python versions, install variants, and verification.
+- **[Walkthrough](https://dlfelps.github.io/agent-grammar/walkthrough/)** — Clone the [`dlfelps/roller-coaster`](https://github.com/dlfelps/roller-coaster) FastAPI demo, decorate its three tests, and generate `workflows.md` end-to-end in under 10 minutes.
+- **[Configuration](https://dlfelps.github.io/agent-grammar/configuration/)** — Every pytest flag, `GrammarRouter` argument, and CLI option.
+- **[API Reference](https://dlfelps.github.io/agent-grammar/api-reference/)** — Generated from the in-package docstrings.
 
 ## Configuration
 

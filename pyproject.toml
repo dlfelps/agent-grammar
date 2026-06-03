@@ -39,7 +39,11 @@ dev = [
     "ruff",
 ]
 
-
+[project.urls]
+Homepage = "https://github.com/dlfelps/agent-grammar"
+Documentation = "https://dlfelps.github.io/agent-grammar/"
+Repository = "https://github.com/dlfelps/agent-grammar"
+Issues = "https://github.com/dlfelps/agent-grammar/issues"
 
 [project.entry-points.pytest11]
 agent_grammar = "agent_grammar.testing.plugin"
