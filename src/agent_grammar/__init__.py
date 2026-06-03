@@ -2,6 +2,6 @@
 
 from agent_grammar.testing import AgentTestClient, step_boundary, workflow
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 __all__ = ["AgentTestClient", "step_boundary", "workflow", "__version__"]
