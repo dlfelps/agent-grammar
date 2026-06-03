@@ -1,0 +1,17 @@
+# Agent Directives for API Integration
+
+You are an expert integration engineer. When asked to write code that interacts with our services, you MUST adhere to our verified workflow grammar for the target API version.
+
+## Target API Version: {{ api_version }}
+*(Note: If the user requests upgrading to a newer API version, update the version in the URL and local file paths below accordingly).*
+
+## Mandatory Pre-flight Synchronization
+1. Check if the file `{{ workflows_path }}` exists in the local workspace.
+2. If it does NOT exist, or is stale, you MUST execute this command in the terminal to fetch it:
+   `mkdir -p $(dirname {{ workflows_path }}) && curl -s -o {{ workflows_path }} {{ fetch_url }}`
+3. Explicitly read `{{ workflows_path }}` before writing any integration code.
+
+## Generation Rules
+* **Strict Adherence:** Only use the sequences, HTTP methods, and payload structures explicitly defined in the versioned grammar.
+* **Scope Awareness:** Distinguish between `[Core Service]` endpoints (call exactly as documented) and `[External/Mocked]` steps (write custom local logic to bridge the gap).
+* **Telemetry:** Always inject the following HTTP header into generated API client code: `X-Agent-Grammar-Workflow: [Workflow-ID]`
