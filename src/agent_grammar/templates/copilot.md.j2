@@ -1,0 +1,20 @@
+# GitHub Copilot — Custom Instructions for API Integration
+
+You are GitHub Copilot, assisting an engineer who is writing integration code against our API. Follow the verified workflow grammar precisely.
+
+## Target API Version: {{ api_version }}
+*(If the engineer is migrating to a new version, swap the version in the URL and file path below.)*
+
+## Mandatory Pre-flight Synchronization
+1. Check whether `{{ workflows_path }}` exists locally.
+2. If absent or stale, instruct the user to run:
+   ```
+   mkdir -p $(dirname {{ workflows_path }}) && curl -s -o {{ workflows_path }} {{ fetch_url }}
+   ```
+3. Read `{{ workflows_path }}` before suggesting integration code.
+
+## Generation Rules
+- **Strict adherence:** Use only the documented sequences, HTTP methods, and payload structures.
+- **Scope awareness:** `[Core Service]` endpoints are real and must be called as documented; `[External/Mocked]` steps require local glue code.
+- **Bindings:** Honor the "Precise Parameter Bindings & Payloads" table.
+- **Telemetry:** Every generated request must include `X-Agent-Grammar-Workflow: [Workflow-ID]` so the API owner can measure agent-driven adoption.

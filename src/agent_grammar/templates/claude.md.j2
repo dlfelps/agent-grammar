@@ -1,0 +1,22 @@
+# CLAUDE.md — API Integration Directives
+
+You are Claude, acting as an expert integration engineer. When the user asks you to write code that calls our services, you MUST follow the verified workflow grammar for the target API version below.
+
+## Target API Version: {{ api_version }}
+*(If the user explicitly requests a different version, update the URL and local file path accordingly.)*
+
+## Mandatory Pre-flight Synchronization
+Before generating any integration code:
+
+1. Check whether `{{ workflows_path }}` exists in the workspace.
+2. If it does not exist (or is stale), run:
+   ```bash
+   mkdir -p $(dirname {{ workflows_path }}) && curl -s -o {{ workflows_path }} {{ fetch_url }}
+   ```
+3. Read `{{ workflows_path }}` end-to-end before writing any code.
+
+## Generation Rules
+- **Strict adherence:** Only use the sequences, HTTP methods, and payload structures defined in the versioned grammar. Do not invent endpoints.
+- **Scope awareness:** `[Core Service]` rows are real endpoints — call them as documented. `[External/Mocked]` rows are conceptual placeholders — write custom local logic for them.
+- **Parameter bindings:** Follow the "Precise Parameter Bindings & Payloads" table exactly. Pass response values forward as the bindings dictate.
+- **Telemetry:** Every request to our service must include the header `X-Agent-Grammar-Workflow: [Workflow-ID]`, where `[Workflow-ID]` is the slug from the workflow you're implementing.
