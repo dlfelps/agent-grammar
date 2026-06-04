@@ -14,6 +14,19 @@ no missing parameter bindings.
 > Single source of truth: when business logic changes and tests are updated,
 > the AI documentation re-compiles automatically.
 
+## How it differs from `fastapi-mcp`
+
+`agent-grammar` is aimed at making an agent a **better coder**, not a
+**self-sufficient** one. Tools like
+[`fastapi-mcp`](https://github.com/tadata-org/fastapi_mcp) expose your
+endpoints as live MCP tools so an agent can *call* your API directly at
+runtime. `agent-grammar` does the opposite: it never puts the agent in the
+request path. It hands the agent a test-gated workflow contract to *read* so
+the integration code it writes — code a developer reviews and ships — is
+correct the first time. The two are complementary; see
+[agent-grammar vs. fastapi-mcp](https://dlfelps.github.io/agent-grammar/comparison/)
+for the full comparison.
+
 ## Install
 
 ```bash
