@@ -85,17 +85,3 @@ def test_workflow_supports_async() -> None:
     recorder = getattr(demo, RECORDER_ATTR)
     assert recorder.complete is True
     assert len(recorder.steps) == 1
-
-
-def test_workflow_normalizes_dict_bindings() -> None:
-    @workflow(
-        name="Demo",
-        intent="x",
-        bindings=[{"source": "Step 1.foo", "target": "Step 2.bar"}],
-    )
-    def demo() -> None:
-        pass
-
-    recorder = getattr(demo, RECORDER_ATTR)
-    assert recorder.bindings[0].source == "Step 1.foo"
-    assert recorder.bindings[0].target == "Step 2.bar"

@@ -42,22 +42,15 @@ directory).
 |---|---|---|---|
 | `name` | `str` | yes | Display name. Slugified into the workflow ID (`"VIP Fast Pass"` → `vip_fast_pass`). |
 | `intent` | `str` | yes | One-sentence description of what the workflow accomplishes. Shown in the blueprint header. |
-| `bindings` | `list[dict \| Binding]` | no | Parameter bindings, each with `source` and `target` keys. See below. |
 
-### Binding strings
-
-A binding has the shape `"Step N.<location>" → "Step M.<location>"` where:
-
-- `N` and `M` are 1-based step numbers (HTTP **and** boundary steps count).
-- `<location>` describes where to read from or write to. Conventional
-  prefixes:
-  - `response.<field>` — a field on the HTTP response JSON of step `N`
-  - `body.<field>` — a field on the HTTP request body of step `M`
-  - `headers.<name>` — a header on the request of step `M`
-  - `<custom>` — any string for non-HTTP boundary steps (e.g. `computed_path`)
-
-The strings are passed through to the rendered blueprint verbatim — they're
-hints to an AI agent reading the docs, not enforced contracts.
+!!! note "No manual bindings"
+    Data flow between steps is **not** declared by hand. The blueprint's
+    "Observed Request & Response Payloads" section renders the actual request
+    and response body of each step (captured from the passing test run, with
+    secret-looking fields redacted), so a consuming agent can match field
+    names and example values across steps itself — including cases where a
+    value is transformed (e.g. wrapped in `Bearer `) before a later step uses
+    it.
 
 ### `step_boundary(domain, name)`
 

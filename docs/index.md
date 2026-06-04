@@ -44,10 +44,6 @@ client = AgentTestClient(app)
 @workflow(
     name="VIP Fast Pass Booking",
     intent="Purchase a VIP ticket and reserve a ride with it.",
-    bindings=[
-        {"source": "Step 1.response.ticket_uuid",
-         "target": "Step 3.body.ticket_uuid"},
-    ],
 )
 def test_vip_fast_pass_workflow():
     purchase = client.post("/v1/ticketing/purchase", json={"ticket_type": "VIP"})
@@ -65,7 +61,8 @@ def test_vip_fast_pass_workflow():
     assert reserve.status_code == 200
 ```
 
-Compiles to a blueprint that begins:
+Compiles to a blueprint with an ordered execution sequence plus the request
+and response body that each step actually observed:
 
 ```markdown
 ## Workflow: VIP Fast Pass Booking
@@ -77,9 +74,18 @@ Compiles to a blueprint that begins:
 | Step | Domain / Boundary | Action | Description |
 |---|---|---|---|
 | 1 | `[Core Service]` | `POST /v1/ticketing/purchase` | ... |
-| 2 | `[Client Logic]` | `Compute reservation time` | ... |
+| 2 | `[External/Mocked]` | `Client Logic Query` | Compute reservation time. ... |
 | 3 | `[Core Service]` | `POST /v1/rides/reserve` | ... |
+
+### 2. Observed Request & Response Payloads
+#### Step 1 — `POST /v1/ticketing/purchase` → `200`
+...the captured request/response bodies for each step, secrets redacted...
 ```
+
+The data flow between steps is never hand-written: the agent reads the
+observed payloads and matches field names and example values across steps
+(for example, the `ticket_uuid` returned by step 1 reappears in step 3's
+request body).
 
 ## Where to next
 

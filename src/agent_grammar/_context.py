@@ -6,7 +6,6 @@ from contextvars import ContextVar
 from typing import Any
 
 from agent_grammar._models import (
-    Binding,
     BoundaryStep,
     HttpStep,
     WorkflowRecord,
@@ -21,11 +20,9 @@ class WorkflowRecorder:
         self,
         name: str,
         intent: str,
-        bindings: list[Binding] | None = None,
     ) -> None:
         self.name = name
         self.intent = intent
-        self.bindings: list[Binding] = list(bindings) if bindings else []
         self.steps: list[HttpStep | BoundaryStep] = []
         self.complete: bool = False
 
@@ -43,7 +40,6 @@ class WorkflowRecorder:
             name=self.name,
             slug=slugify(self.name),
             intent=self.intent,
-            bindings=list(self.bindings),
             steps=list(self.steps),
         )
 

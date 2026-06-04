@@ -13,41 +13,28 @@ from agent_grammar._context import (
     reset_recorder,
     set_active_recorder,
 )
-from agent_grammar._models import Binding, BoundaryStep
+from agent_grammar._models import BoundaryStep
 
 RECORDER_ATTR = "_agent_grammar_recorder"
-
-
-def _normalize_bindings(
-    raw: list[dict[str, str] | Binding] | None,
-) -> list[Binding]:
-    if not raw:
-        return []
-    out: list[Binding] = []
-    for item in raw:
-        if isinstance(item, Binding):
-            out.append(item)
-        else:
-            out.append(Binding(source=item["source"], target=item["target"]))
-    return out
 
 
 def workflow(
     *,
     name: str,
     intent: str,
-    bindings: list[dict[str, str] | Binding] | None = None,
 ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """Decorate a pytest test function to record its HTTP/boundary steps.
 
     The recorder is stashed on the wrapper as ``_agent_grammar_recorder`` so the
     pytest plugin can collect it after the test passes.
+
+    Data flow between steps is not declared by hand; the captured request and
+    response payloads of each step are rendered verbatim (with secrets
+    redacted) so the consuming agent can wire calls together from ground truth.
     """
 
-    normalized = _normalize_bindings(bindings)
-
     def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
-        recorder = WorkflowRecorder(name=name, intent=intent, bindings=normalized)
+        recorder = WorkflowRecorder(name=name, intent=intent)
 
         if asyncio.iscoroutinefunction(func):
 

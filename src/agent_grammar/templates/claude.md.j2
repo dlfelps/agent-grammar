@@ -18,5 +18,5 @@ Before generating any integration code:
 ## Generation Rules
 - **Strict adherence:** Only use the sequences, HTTP methods, and payload structures defined in the versioned grammar. Do not invent endpoints.
 - **Scope awareness:** `[Core Service]` rows are real endpoints — call them as documented. `[External/Mocked]` rows are conceptual placeholders — write custom local logic for them.
-- **Parameter bindings:** Follow the "Precise Parameter Bindings & Payloads" table exactly. Pass response values forward as the bindings dictate.
+- **Data flow:** Read the "Observed Request & Response Payloads" section. Each step shows the exact request and response bodies captured from the verified test run; match field names and example values across steps to pass values forward. A value produced by one step may be transformed (e.g. wrapped in `Bearer `) before a later step consumes it.
 - **Telemetry:** Every request to our service must include the header `X-Agent-Grammar-Workflow: [Workflow-ID]`, where `[Workflow-ID]` is the slug from the workflow you're implementing.

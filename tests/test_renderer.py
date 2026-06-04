@@ -8,7 +8,6 @@ from __future__ import annotations
 from pathlib import Path
 
 from agent_grammar._models import (
-    Binding,
     BoundaryStep,
     HttpStep,
     WorkflowRecord,
@@ -27,16 +26,6 @@ def _build_material_record() -> WorkflowRecord:
             "Secure an identity token, query the local database for a zone, "
             "and register an asset."
         ),
-        bindings=[
-            Binding(
-                source="Step 1.response.access_token",
-                target="Step 3.headers.Authorization",
-            ),
-            Binding(
-                source="Step 2.mocked_db_result",
-                target="Step 3.body.assigned_zone",
-            ),
-        ],
         steps=[
             HttpStep(
                 method="POST",
@@ -67,12 +56,11 @@ def test_renderer_matches_golden_fixture() -> None:
     assert rendered == expected
 
 
-def test_renderer_handles_empty_bindings() -> None:
+def test_renderer_renders_payloads_for_bodyless_request() -> None:
     record = WorkflowRecord(
         name="Solo",
         slug=slugify("Solo"),
         intent="single-step flow",
-        bindings=[],
         steps=[
             HttpStep(
                 method="GET",
@@ -85,7 +73,31 @@ def test_renderer_handles_empty_bindings() -> None:
     )
     rendered = MarkdownRenderer().render([record])
     assert "## Workflow: Solo" in rendered
-    assert "_(none)_" in rendered
+    assert "### 2. Observed Request & Response Payloads" in rendered
+    # A GET with no request body renders an explicit no-body marker.
+    assert "_(no body)_" in rendered
+    assert '"ok": true' in rendered
+
+
+def test_renderer_redacts_secret_fields() -> None:
+    record = WorkflowRecord(
+        name="Auth",
+        slug=slugify("Auth"),
+        intent="token flow",
+        steps=[
+            HttpStep(
+                method="POST",
+                path="/v1/auth/token",
+                request_json={"password": "hunter2"},
+                status_code=200,
+                response_json={"access_token": "super-secret-value"},
+            )
+        ],
+    )
+    rendered = MarkdownRenderer().render([record])
+    assert "hunter2" not in rendered
+    assert "super-secret-value" not in rendered
+    assert "[REDACTED]" in rendered
 
 
 def test_slugify_lowercases_and_underscores() -> None:

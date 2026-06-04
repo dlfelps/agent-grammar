@@ -68,9 +68,10 @@ below. Three things change:
 - **Import** `AgentTestClient`, `step_boundary`, and `workflow` from
   `agent_grammar`. The standard `fastapi.testclient.TestClient` becomes
   `AgentTestClient`.
-- **Decorate** each test with `@workflow(...)`, giving it a display name,
-  an intent, and the parameter bindings that an AI agent will need to wire
-  its requests together.
+- **Decorate** each test with `@workflow(...)`, giving it a display name and
+  an intent. You don't declare how data flows between steps — the blueprint
+  captures each step's real request and response body, and the agent wires
+  the requests together from that.
 - **Mark non-HTTP steps** with `step_boundary(...)` so they show up in the
   blueprint as `[External/Mocked]`-style rows the agent has to fill in.
 
@@ -86,12 +87,6 @@ client = AgentTestClient(app)
 @workflow(
     name="VIP Fast Pass Booking",
     intent="Purchase a VIP ticket and reserve a ride with the acquired ticket UUID.",
-    bindings=[
-        {"source": "Step 1.response.ticket_uuid",
-         "target": "Step 3.body.ticket_uuid"},
-        {"source": "Step 2.computed_reservation_time",
-         "target": "Step 3.body.reservation_time"},
-    ],
 )
 def test_vip_fast_pass_workflow():
     """Buy a VIP pass and immediately book a ride 15 minutes out."""
@@ -123,12 +118,6 @@ def test_vip_fast_pass_workflow():
 @workflow(
     name="Weather-Triggered Evacuation",
     intent="Detect a severe weather event, raise park-wide alarms, and issue mass refunds.",
-    bindings=[
-        {"source": "Step 1.weather_reason",
-         "target": "Step 2.body.reason"},
-        {"source": "Step 1.weather_reason",
-         "target": "Step 3.body.reason"},
-    ],
 )
 def test_weather_evacuation_workflow():
     """Trigger park alarms in response to a weather event, then refund tickets."""
@@ -157,12 +146,6 @@ def test_weather_evacuation_workflow():
 @workflow(
     name="Mascot Security Dispatch",
     intent="Look up a mascot's zone, compute a path to it, and dispatch security.",
-    bindings=[
-        {"source": "Step 1.response.zone_id",
-         "target": "Step 3.body.target_zone"},
-        {"source": "Step 2.computed_path",
-         "target": "Step 3.body.path_array"},
-    ],
 )
 def test_mascot_dispatch_workflow():
     """Locate a mascot, compute a path, and send security along it."""
@@ -192,11 +175,12 @@ def test_mascot_dispatch_workflow():
       into the workflow. Use it for client-side calculations, mocked
       external services, queued work — anything an integrator will need to
       implement on their side.
-    - `bindings` declare data-flow contracts in the form
-      `"Step N.<location>" → "Step M.<location>"`. The numbers refer to the
-      step's position in the workflow, counting both HTTP and boundary
-      steps. These bindings are what stop an agent from inventing parameter
-      names or losing track of which value flows where.
+    - You never hand-write data-flow bindings. The blueprint records the
+      actual request and response body of every step (secrets redacted), so
+      the agent matches field names and example values across steps itself —
+      e.g. it sees the `ticket_uuid` from step 1's response reappear in step
+      3's request body. This is what stops an agent from inventing parameter
+      names, and it can't drift out of sync because nothing is hand-authored.
 
 ## 5. Generate the workflows blueprint
 
@@ -211,8 +195,8 @@ workflow — each with:
 - A workflow ID (the slugified name)
 - The declared intent
 - An "Ordered Execution Sequence" table listing every HTTP and boundary step
-- A "Precise Parameter Bindings" table derived from the `bindings=[...]`
-  argument
+- An "Observed Request & Response Payloads" section showing the real request
+  and response body each step captured during the test run (secrets redacted)
 
 !!! warning "Test-gated guarantee"
     If any decorated test fails, that workflow is excluded from
