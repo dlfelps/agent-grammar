@@ -20,6 +20,14 @@ silently invents endpoints, swaps parameter names, or misses the order that
 two API calls have to happen in. The fix isn't a longer prompt — it's a
 machine-readable contract that the agent can fetch on demand.
 
+!!! info "Not an MCP server"
+    `agent-grammar` is aimed at making an agent a *better coder*, not a
+    *self-sufficient* one. It never puts the agent in the request path —
+    instead of exposing your endpoints as live tools the agent calls (the
+    [`fastapi-mcp`](comparison.md) model), it hands the agent a test-gated
+    contract so the integration code it writes is correct the first time. See
+    [agent-grammar vs. fastapi-mcp](comparison.md) for the full comparison.
+
 `agent-grammar` produces that contract directly from the tests you already
 have:
 
