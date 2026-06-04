@@ -32,6 +32,17 @@ def test_export_generates_all_platforms(tmp_path: Path) -> None:
         assert "https://api.production.com/v1/agent-workflows" in text
         assert ".agent/workflows_v1.md" in text
         assert "X-Agent-Grammar-Workflow" in text
+        # Both a bash (Linux/macOS) and a PowerShell (Windows) fetch
+        # command are emitted so users on either platform can sync.
+        assert (
+            "curl -s -o .agent/workflows_v1.md "
+            "https://api.production.com/v1/agent-workflows" in text
+        )
+        assert (
+            "Invoke-WebRequest -Uri "
+            "https://api.production.com/v1/agent-workflows "
+            "-OutFile .agent/workflows_v1.md" in text
+        )
 
 
 def test_export_respects_custom_workflows_path(tmp_path: Path) -> None:

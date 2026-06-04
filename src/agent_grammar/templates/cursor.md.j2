@@ -7,8 +7,9 @@ You are an expert integration engineer. When asked to write code that interacts 
 
 ## Mandatory Pre-flight Synchronization
 1. Check if the file `{{ workflows_path }}` exists in the local workspace.
-2. If it does NOT exist, or is stale, you MUST execute this command in the terminal to fetch it:
-   `mkdir -p $(dirname {{ workflows_path }}) && curl -s -o {{ workflows_path }} {{ fetch_url }}`
+2. If it does NOT exist, or is stale, you MUST execute the command for your shell in the terminal to fetch it.
+   - On Linux/macOS (bash): `mkdir -p $(dirname {{ workflows_path }}) && curl -s -o {{ workflows_path }} {{ fetch_url }}`
+   - On Windows (PowerShell): `New-Item -ItemType Directory -Force -Path (Split-Path -Parent {{ workflows_path }}) | Out-Null; Invoke-WebRequest -Uri {{ fetch_url }} -OutFile {{ workflows_path }}`
 3. Explicitly read `{{ workflows_path }}` before writing any integration code.
 
 ## Generation Rules
