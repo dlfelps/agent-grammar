@@ -25,8 +25,6 @@ you'll touch when annotating a test:
 
 ::: agent_grammar._models.BoundaryStep
 
-::: agent_grammar._models.Binding
-
 ::: agent_grammar._models.WorkflowRecord
 
 ## Serving (`agent_grammar.serve.fastapi`)

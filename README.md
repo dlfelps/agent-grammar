@@ -38,10 +38,6 @@ client = AgentTestClient(app)
 @workflow(
     name="Material Onboarding Lifecycle",
     intent="Secure a token, query the local DB for a zone, and register an asset.",
-    bindings=[
-        {"source": "Step 1.response.access_token", "target": "Step 3.headers.Authorization"},
-        {"source": "Step 2.mocked_db_result",      "target": "Step 3.body.assigned_zone"},
-    ],
 )
 def test_compile_material_onboarding():
     auth = client.post("/v1/auth/token", json={"seed": "dev-token"})

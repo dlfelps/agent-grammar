@@ -2,12 +2,48 @@
 
 from __future__ import annotations
 
+import json
+from typing import Any
+
 from agent_grammar._models import (
-    Binding,
     BoundaryStep,
     HttpStep,
     WorkflowRecord,
 )
+
+# Keys whose values are redacted in rendered payloads. Matched case-
+# insensitively as substrings, so "access_token" matches "token", etc.
+_SECRET_KEY_HINTS = (
+    "authorization",
+    "token",
+    "password",
+    "passwd",
+    "secret",
+    "api_key",
+    "apikey",
+    "credential",
+)
+
+_REDACTED = "[REDACTED]"
+_MAX_STR_LEN = 200
+
+
+def _is_secret_key(key: str) -> bool:
+    lowered = key.lower()
+    return any(hint in lowered for hint in _SECRET_KEY_HINTS)
+
+
+def _redact(value: Any, *, parent_key: str | None = None) -> Any:
+    """Recursively redact secret-looking fields and truncate long strings."""
+    if parent_key is not None and _is_secret_key(parent_key):
+        return _REDACTED
+    if isinstance(value, dict):
+        return {k: _redact(v, parent_key=k) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_redact(v) for v in value]
+    if isinstance(value, str) and len(value) > _MAX_STR_LEN:
+        return value[:_MAX_STR_LEN] + "…(truncated)"
+    return value
 
 
 class MarkdownRenderer:
@@ -21,6 +57,13 @@ class MarkdownRenderer:
         "following HTTP header in all requests to our service to assist with "
         "our internal metrics:\n"
         "`X-Agent-Grammar-Workflow: [Workflow-ID]`"
+    )
+
+    PAYLOAD_NOTE = (
+        "Captured verbatim from the passing test run (secrets redacted). Use "
+        "these exact field names and example values to wire calls together; a "
+        "value produced by one step may be transformed before a later step "
+        "consumes it."
     )
 
     def render(self, records: list[WorkflowRecord]) -> str:
@@ -42,8 +85,10 @@ class MarkdownRenderer:
         chunks.append("### 1. Ordered Execution Sequence")
         chunks.append(self._render_steps_table(record.steps))
         chunks.append("")
-        chunks.append("### 2. Precise Parameter Bindings & Payloads")
-        chunks.append(self._render_bindings_table(record.bindings, record.steps))
+        chunks.append("### 2. Observed Request & Response Payloads")
+        chunks.append(self.PAYLOAD_NOTE)
+        chunks.append("")
+        chunks.append(self._render_payloads(record.steps))
         return "\n".join(chunks)
 
     def _render_steps_table(
@@ -85,71 +130,39 @@ class MarkdownRenderer:
             return "Remove resource via the documented endpoint."
         return "Invoke the documented endpoint."
 
-    def _render_bindings_table(
-        self,
-        bindings: list[Binding],
-        steps: list[HttpStep | BoundaryStep],
+    def _render_payloads(
+        self, steps: list[HttpStep | BoundaryStep]
     ) -> str:
+        blocks: list[str] = []
+        for idx, step in enumerate(steps, start=1):
+            if isinstance(step, HttpStep):
+                blocks.append(self._render_http_payload(idx, step))
+            else:
+                blocks.append(self._render_boundary_payload(idx, step))
+        return "\n\n".join(blocks)
+
+    def _render_http_payload(self, idx: int, step: HttpStep) -> str:
         lines = [
-            "| Target Input Field | Source Reference Property | Logic for Generated Code |",
-            "|---|---|---|",
+            f"#### Step {idx} — `{step.method} {step.path}` → `{step.status_code}`"
         ]
-        if not bindings:
-            lines.append("| _(none)_ | _(none)_ | _(none)_ |")
-            return "\n".join(lines)
-        for binding in bindings:
-            target_field = self._format_binding_endpoint(binding.target, steps)
-            source_ref = self._format_binding_source(binding.source, steps)
-            logic = self._derive_logic(binding)
-            lines.append(f"| `{target_field}` | `{source_ref}` | {logic} |")
+        lines.append("*Request body:*")
+        lines.append(self._json_block(step.request_json))
+        lines.append("*Response body:*")
+        lines.append(self._json_block(step.response_json))
         return "\n".join(lines)
 
-    def _format_binding_endpoint(
-        self,
-        target: str,
-        steps: list[HttpStep | BoundaryStep],
-    ) -> str:
-        # "Step 3.headers.Authorization" -> "POST /v1/materials.headers.Authorization"
-        if target.startswith("Step "):
-            try:
-                head, rest = target.split(".", 1)
-                step_num = int(head.split(" ", 1)[1])
-            except (ValueError, IndexError):
-                return target
-            if 1 <= step_num <= len(steps):
-                step = steps[step_num - 1]
-                if isinstance(step, HttpStep):
-                    return f"{step.method} {step.path}.{rest}"
-        return target
+    def _render_boundary_payload(self, idx: int, step: BoundaryStep) -> str:
+        domain = step.domain or "External"
+        return (
+            f"#### Step {idx} — `[External/Mocked]` {domain}\n"
+            f"{step.name}. Implementer must produce this value locally; it is "
+            "not returned by the API."
+        )
 
-    def _format_binding_source(
-        self,
-        source: str,
-        steps: list[HttpStep | BoundaryStep],
-    ) -> str:
-        # "Step 2.mocked_db_result" -> "Step 2 Database Query Result" when step 2 is a boundary
-        if source.startswith("Step "):
-            try:
-                head, rest = source.split(".", 1)
-                step_num = int(head.split(" ", 1)[1])
-            except (ValueError, IndexError):
-                return source
-            if 1 <= step_num <= len(steps):
-                step = steps[step_num - 1]
-                if isinstance(step, BoundaryStep):
-                    return f"Step {step_num} {step.domain} Query Result"
-        return source
-
-    def _derive_logic(self, binding: Binding) -> str:
-        target_lower = binding.target.lower()
-        source_lower = binding.source.lower()
-        if target_lower.endswith(".headers.authorization"):
-            return (
-                "Extract token from Step 1 response and prefix with 'Bearer '."
-            )
-        if "mocked" in source_lower or "db" in source_lower:
-            return (
-                "Store the external DB zone ID in a variable and map it to "
-                "the JSON payload."
-            )
-        return "Map the source value into the target field."
+    def _json_block(self, payload: Any) -> str:
+        if payload is None:
+            return "_(no body)_"
+        rendered = json.dumps(
+            _redact(payload), indent=2, ensure_ascii=False, sort_keys=False
+        )
+        return f"```json\n{rendered}\n```"

@@ -16,8 +16,37 @@ Whenever you generate code for these workflows, you MUST include the following H
 | 2 | `[External/Mocked]` | `Database Query` | Query PostgreSQL for Zone UUID. (Implementer must write local logic here). |
 | 3 | `[Core Service]` | `POST /v1/materials` | Submit payload to the documented endpoint. |
 
-### 2. Precise Parameter Bindings & Payloads
-| Target Input Field | Source Reference Property | Logic for Generated Code |
-|---|---|---|
-| `POST /v1/materials.headers.Authorization` | `Step 1.response.access_token` | Extract token from Step 1 response and prefix with 'Bearer '. |
-| `POST /v1/materials.body.assigned_zone` | `Step 2 Database Query Result` | Store the external DB zone ID in a variable and map it to the JSON payload. |
+### 2. Observed Request & Response Payloads
+Captured verbatim from the passing test run (secrets redacted). Use these exact field names and example values to wire calls together; a value produced by one step may be transformed before a later step consumes it.
+
+#### Step 1 — `POST /v1/auth/token` → `200`
+*Request body:*
+```json
+{
+  "seed": "dev-token"
+}
+```
+*Response body:*
+```json
+{
+  "access_token": "[REDACTED]"
+}
+```
+
+#### Step 2 — `[External/Mocked]` Database
+Query PostgreSQL for Zone UUID. Implementer must produce this value locally; it is not returned by the API.
+
+#### Step 3 — `POST /v1/materials` → `201`
+*Request body:*
+```json
+{
+  "sku": "MAT-9901",
+  "assigned_zone": "z-1"
+}
+```
+*Response body:*
+```json
+{
+  "id": "mat-001"
+}
+```

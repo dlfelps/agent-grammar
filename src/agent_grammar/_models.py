@@ -27,17 +27,10 @@ Step = Union[HttpStep, BoundaryStep]
 
 
 @dataclass
-class Binding:
-    source: str
-    target: str
-
-
-@dataclass
 class WorkflowRecord:
     name: str
     slug: str
     intent: str
-    bindings: list[Binding] = field(default_factory=list)
     steps: list[Step] = field(default_factory=list)
 
 
